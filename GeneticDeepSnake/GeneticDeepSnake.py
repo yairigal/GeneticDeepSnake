@@ -75,8 +75,10 @@ class Genetic_Snake:
             i += 1
             self.food_vals = self.generate_food_values()
             self.reset_stats()
-            big_pop, max_ftns = self.calc_fitness()
-            self.crossover(big_pop)
+            # big_pop, max_ftns = self.calc_fitness()
+            # self.crossover(big_pop)
+            max_nn,max_ftns = self.calc_fitness_not_random()
+            self.crossover_not_random(max_nn)
             overall_max_pts = self.print_msg(i, max_ftns, overall_max_pts)
 
     def print_msg(self, i, max_ftns, overall_max_pts):
@@ -104,6 +106,11 @@ class Genetic_Snake:
             nn1 = random.choice(big_pop)
             nn2 = random.choice(big_pop)
             self.pop += [self.merge_nn(nn1, nn2)]
+
+    def crossover_not_random(self, max_nn):
+        self.pop = []
+        for i in range(self.N):
+            self.pop += [self.merge_nn(max_nn, max_nn)]
 
     def is_mutation(self):
         if self.mut_rate >= random.random():
@@ -137,7 +144,7 @@ class Genetic_Snake:
                 for k in range(len(chosen_nn.W[i][j])):
                     if self.is_mutation():
                         # c.W[i][j][k] = (s.W[i][j][k] + f.W[i][j][k])/2 + random.uniform(-1, 1)
-                        c.W[i][j][k] = chosen_nn.W[i][j][k] + random.uniform(-10, 10)
+                        c.W[i][j][k] = chosen_nn.W[i][j][k] + random.uniform(-300, 300)
                     else:
                         # c.W[i][j][k] = (s.W[i][j][k] + f.W[i][j][k])/2
                         c.W[i][j][k] = chosen_nn.W[i][j][k]
@@ -179,6 +186,18 @@ class Genetic_Snake:
             big_pop += [nn] * times
         return big_pop, max_fitness
 
+    def calc_fitness_not_random(self):
+        # calculating fitnesses
+        fitnesses = [0] * self.N
+        for i, nn in enumerate(self.pop):
+            fitnesses[i] = self.fitness(nn)
+        pop = zip(self.pop, fitnesses)
+        max_nn, max_fitness = max(pop, key=lambda x: x[1])
+        # saving best nn
+        max_nn.save(dir="./best_snake")
+
+        return max_nn, max_fitness
+
     def generate_food_values(self):
         vals = []
         for _ in range(int(self.snake.height * self.snake.width / self.snake.snake_size ** 2)):
@@ -188,17 +207,18 @@ class Genetic_Snake:
 
 
 # improvements:
-# -avg nn
+# avg nn
 # -make same game each generation
 # -changed fitness
 # -add statistics : died from hunger, died from hitting,max points
 # -changed inputs to be the minimum distance from body.
+# -cross over picks the best each generation
 
 if __name__ == '__main__':
     choice = input("=== Menu ===\n\t1.run genetic alg\n\t2.run best snake\n\t3.play snake\n\t")
     choice = int(choice)
     if choice == 1:
-        genetic = Genetic_Snake(refresh_rate=0, mutation_rate=0.25, population_size=500)
+        genetic = Genetic_Snake(refresh_rate=0, mutation_rate=0.3, population_size=1000)
         genetic.start()
     elif choice == 2:
         nn = NeuralNet.load("./best_snake")

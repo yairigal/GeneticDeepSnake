@@ -89,7 +89,11 @@ class Snake:
             self.check_snake_collision()
             self.check_boundaries_collision()
             if self.game_over or i >= max_steps:
-                return len(self.snake), self.game_over, i
+                if not self.simulation:
+                    x, y = self.snake[0][1].x, self.snake[0][1].y
+                else:
+                    x, y = self.snake[0][0], self.snake[0][1]
+                return len(self.snake), self.game_over, i, distance((x, y), self.food_cords)
 
     def player_events(self):
         if not self.moving_function:
